@@ -1,0 +1,3 @@
+[submodule "MobileStyleGAN.pytorch"]
+	path = MobileStyleGAN.pytorch
+	url = https://github.com/bes-dev/MobileStyleGAN.pytorch
