@@ -14,9 +14,11 @@ from huggingface_hub import hf_hub_download
 
 from model import Model
 
-ORIGINAL_REPO_URL = 'https://github.com/bes-dev/MobileStyleGAN.pytorch'
 TITLE = 'bes-dev/MobileStyleGAN.pytorch'
-DESCRIPTION = f'This is a demo for {ORIGINAL_REPO_URL}.'
+DESCRIPTION = '''This is an unofficial demo for https://github.com/bes-dev/MobileStyleGAN.pytorch.
+
+Expected execution time on Hugging Face Spaces: 1s
+'''
 SAMPLE_IMAGE_DIR = 'https://huggingface.co/spaces/hysts/MobileStyleGAN/resolve/main/samples'
 ARTICLE = f'''## Generated images
 ### FFHQ
@@ -24,6 +26,8 @@ ARTICLE = f'''## Generated images
 - seed: 0-99
 - truncation: 1.0
 ![FFHQ]({SAMPLE_IMAGE_DIR}/ffhq.jpg)
+
+<center><img src="https://visitor-badge.glitch.me/badge?page_id=hysts.mobilestylegan" alt="visitor badge"/></center>
 '''
 
 TOKEN = os.environ['TOKEN']
@@ -40,7 +44,6 @@ def parse_args() -> argparse.Namespace:
                         dest='enable_queue',
                         action='store_false')
     parser.add_argument('--allow-flagging', type=str, default='never')
-    parser.add_argument('--allow-screenshot', action='store_true')
     return parser.parse_args()
 
 
@@ -77,8 +80,6 @@ def load_model(device: torch.device) -> nn.Module:
 
 
 def main():
-    gr.close_all()
-
     args = parse_args()
     device = torch.device(args.device)
 
@@ -103,7 +104,6 @@ def main():
         description=DESCRIPTION,
         article=ARTICLE,
         theme=args.theme,
-        allow_screenshot=args.allow_screenshot,
         allow_flagging=args.allow_flagging,
         live=args.live,
     ).launch(
