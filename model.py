@@ -11,7 +11,6 @@ from core.models.synthesis_network import SynthesisNetwork
 
 
 class Model(nn.Module):
-
     def __init__(self):
         super().__init__()
         # teacher model
