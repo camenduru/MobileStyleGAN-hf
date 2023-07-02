@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import functools
-import os
 
 import gradio as gr
 import numpy as np
@@ -13,8 +12,7 @@ from huggingface_hub import hf_hub_download
 
 from model import Model
 
-TITLE = 'MobileStyleGAN'
-DESCRIPTION = 'This is an unofficial demo for https://github.com/bes-dev/MobileStyleGAN.pytorch.'
+DESCRIPTION = '# [MobileStyleGAN](https://github.com/bes-dev/MobileStyleGAN.pytorch)'
 SAMPLE_IMAGE_DIR = 'https://huggingface.co/spaces/hysts/MobileStyleGAN/resolve/main/samples'
 ARTICLE = f'''## Generated images
 ### FFHQ
@@ -23,8 +21,6 @@ ARTICLE = f'''## Generated images
 - truncation: 1.0
 ![FFHQ]({SAMPLE_IMAGE_DIR}/ffhq.jpg)
 '''
-
-HF_TOKEN = os.getenv('HF_TOKEN')
 
 
 def generate_z(z_dim: int, seed: int, device: torch.device) -> torch.Tensor:
@@ -45,9 +41,8 @@ def generate_image(seed: int, truncation_psi: float, generator: str,
 
 
 def load_model(device: torch.device) -> nn.Module:
-    path = hf_hub_download('hysts/MobileStyleGAN',
-                           'models/mobilestylegan_ffhq_v2.pth',
-                           use_auth_token=HF_TOKEN)
+    path = hf_hub_download('public-data/MobileStyleGAN',
+                           'models/mobilestylegan_ffhq_v2.pth')
     ckpt = torch.load(path)
     model = Model()
     model.load_state_dict(ckpt['state_dict'], strict=False)
@@ -62,29 +57,33 @@ def load_model(device: torch.device) -> nn.Module:
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 model = load_model(device)
 
-func = functools.partial(generate_image, model=model, device=device)
+fn = functools.partial(generate_image, model=model, device=device)
 
-gr.Interface(
-    fn=func,
-    inputs=[
-        gr.Slider(label='Seed',
-                  minimum=0,
-                  maximum=100000,
-                  step=1,
-                  value=0,
-                  randomize=True),
-        gr.Slider(label='Truncation psi',
-                  minimum=0,
-                  maximum=2,
-                  step=0.05,
-                  value=1.0),
-        gr.Radio(label='Generator',
-                 choices=['student', 'teacher'],
-                 type='value',
-                 value='student'),
-    ],
-    outputs=gr.Image(label='Output', type='numpy'),
-    title=TITLE,
-    description=DESCRIPTION,
-    article=ARTICLE,
-).queue().launch(show_api=False)
+with gr.Blocks(css='style.css') as demo:
+    gr.Markdown(DESCRIPTION)
+    with gr.Row():
+        with gr.Column():
+            with gr.Group():
+                seed = gr.Slider(label='Seed',
+                                 minimum=0,
+                                 maximum=100000,
+                                 step=1,
+                                 value=0,
+                                 randomize=True)
+                psi = gr.Slider(label='Truncation psi',
+                                minimum=0,
+                                maximum=2,
+                                step=0.05,
+                                value=1.0)
+                generator = gr.Radio(label='Generator',
+                                     choices=['student', 'teacher'],
+                                     type='value',
+                                     value='student')
+                run_button = gr.Button('Run')
+        with gr.Column():
+            result = gr.Image(label='Output', type='numpy')
+    with gr.Row():
+        gr.Markdown(ARTICLE)
+
+    run_button.click(fn=fn, inputs=[seed, psi, generator], outputs=result)
+demo.queue(max_size=10).launch()
